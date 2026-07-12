@@ -1,0 +1,9 @@
+node_modules/
+web/node_modules/
+web/dist/
+*.bak
+*.bak2
+*.log
+# Local machine tokens — never commit.
+.claude/settings.local.json
+.env

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sign in · webtmux</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .auth-wrap { min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; }
+    .auth-card { width: 100%; max-width: 380px; background: var(--panel, #161821); border: 1px solid var(--border, #2a2d3a);
+      border-radius: 14px; padding: 1.5rem; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+    .auth-card h1 { font-size: 1.25rem; margin: 0 0 .25rem; }
+    .auth-card .sub { color: var(--muted, #8b90a0); font-size: .85rem; margin: 0 0 1.25rem; }
+    .auth-card label { display: block; font-size: .8rem; color: var(--muted, #8b90a0); margin: .6rem 0 .25rem; }
+    .auth-card input { width: 100%; box-sizing: border-box; padding: .6rem .7rem; border-radius: 8px;
+      border: 1px solid var(--border, #2a2d3a); background: var(--bg, #0e0f15); color: inherit; font-size: .95rem; }
+    .auth-card button.primary { width: 100%; margin-top: 1rem; padding: .65rem; border: 0; border-radius: 8px;
+      background: var(--accent, #5b8cff); color: #fff; font-weight: 600; font-size: .95rem; cursor: pointer; }
+    .auth-card .toggle { margin-top: 1rem; text-align: center; font-size: .85rem; color: var(--muted, #8b90a0); }
+    .auth-card .toggle a { color: var(--accent, #5b8cff); cursor: pointer; }
+    .auth-err { margin-top: .75rem; color: #ff6b6b; font-size: .85rem; min-height: 1em; }
+    .signup-only { display: none; }
+    body.mode-signup .signup-only { display: block; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <form class="auth-card" id="form">
+      <h1 id="title">Welcome back</h1>
+      <p class="sub" id="subtitle">Sign in to your webtmux workspace.</p>
+
+      <label for="name" class="signup-only">Name</label>
+      <input id="name" class="signup-only" type="text" autocomplete="name" />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" required />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required minlength="8" />
+
+      <label for="invite" class="signup-only">Invite code</label>
+      <input id="invite" class="signup-only" type="text" autocomplete="off" placeholder="beta invite" />
+
+      <button class="primary" id="submit" type="submit">Sign in</button>
+      <div class="auth-err" id="err"></div>
+      <div class="toggle" id="toggle"><span id="toggle-text">No account?</span> <a id="toggle-link">Create one</a></div>
+    </form>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let mode = 'login';
+    function setMode(m) {
+      mode = m;
+      document.body.classList.toggle('mode-signup', m === 'signup');
+      $('title').textContent = m === 'signup' ? 'Create your account' : 'Welcome back';
+      $('subtitle').textContent = m === 'signup' ? 'Beta access requires an invite code.' : 'Sign in to your webtmux workspace.';
+      $('submit').textContent = m === 'signup' ? 'Create account' : 'Sign in';
+      $('toggle-text').textContent = m === 'signup' ? 'Already have an account?' : 'No account?';
+      $('toggle-link').textContent = m === 'signup' ? 'Sign in' : 'Create one';
+      $('password').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
+      $('err').textContent = '';
+    }
+    $('toggle-link').onclick = () => setMode(mode === 'signup' ? 'login' : 'signup');
+
+    $('form').onsubmit = async (e) => {
+      e.preventDefault();
+      $('err').textContent = '';
+      $('submit').disabled = true;
+      const body = { email: $('email').value.trim(), password: $('password').value };
+      if (mode === 'signup') { body.name = $('name').value.trim(); body.invite = $('invite').value.trim(); }
+      try {
+        const res = await fetch('/api/auth/' + mode, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(d.error || 'Something went wrong.');
+        location.href = '/';
+      } catch (err) {
+        $('err').textContent = err.message;
+        $('submit').disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

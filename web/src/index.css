@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-bg text-slate-700 font-sans antialiased; }
+  /* Warm ambient wash (base44-style): cool sky at the top melting into cream —
+     gives the whole app a crafted, non-flat feel without touching components. */
+  body { background-image:
+    radial-gradient(75rem 48rem at 50% -12%, rgba(125,180,255,.22), transparent 62%),
+    radial-gradient(40rem 30rem at 100% 8%, rgba(139,92,246,.07), transparent 55%),
+    linear-gradient(180deg, #f2f7fd 0%, #f9f7f2 55%, #fdf3e7 100%);
+    background-attachment: fixed; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all; }
+  .btn-primary { @apply btn bg-accent text-white shadow-sm hover:bg-accent/90 active:scale-[.99]; }
+  .btn-ghost { @apply btn border border-border bg-white text-slate-700 hover:bg-panel2 hover:border-slate-300; }
+  .btn-danger { @apply btn border border-danger/30 bg-white text-danger hover:bg-danger/5; }
+  .card { @apply rounded-2xl border border-border bg-panel p-5 shadow-card; }
+  .input { @apply w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-accent focus:shadow-glow; }
+  .label { @apply mb-1 block text-xs font-medium text-muted; }
+  .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+  /* Hero prompt textarea — visually dominant, glows on focus */
+  .prompt-area { @apply w-full resize-none rounded-2xl border border-border bg-white px-5 py-4 text-base text-slate-900 shadow-card outline-none transition-all placeholder:text-slate-400 focus:border-accent focus:shadow-glow; }
+  /* Floating hero prompt CARD (base44-style): the page's single focal point.
+     The textarea inside is borderless; the card owns the elevation + focus glow. */
+  .hero-card { @apply rounded-[1.75rem] border border-white/80 bg-white p-3 text-left shadow-hero transition-shadow focus-within:shadow-heroFocus; }
+  .hero-card textarea { @apply w-full resize-none border-0 bg-transparent px-3 pt-2 text-base text-slate-900 outline-none placeholder:text-slate-400; }
+  .send-btn { @apply grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-lg font-bold text-white shadow-md transition-all hover:scale-105 hover:bg-accent/90 active:scale-95 disabled:opacity-35 disabled:shadow-none disabled:hover:scale-100; }
+  /* Pill nav: floating, blurred, hairline */
+  .pill-nav { @apply flex items-center justify-between rounded-full border border-white/70 bg-white/70 py-2 pl-5 pr-2 shadow-card backdrop-blur-md; }
+  /* Tiny uppercase section eyebrow */
+  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400; }
+  /* Segmented control (output-format toggle above the headline) */
+  .seg { @apply inline-flex items-center gap-1 rounded-full border border-white/70 bg-white/70 p-1 shadow-card backdrop-blur-md; }
+  .seg-item { @apply cursor-pointer rounded-full px-3.5 py-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-800; }
+  .seg-item-active { @apply bg-slate-900 text-white hover:text-white; }
+  /* Template / example chip row */
+  .chip { @apply inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent hover:shadow-card; }
+  /* Chat message bubbles (revise panel) */
+  .chat-bubble-user { @apply ml-auto max-w-[80%] rounded-2xl rounded-br-sm bg-accent px-4 py-2.5 text-sm text-white; }
+  .chat-bubble-ai { @apply mr-auto max-w-[80%] rounded-2xl rounded-bl-sm border border-border bg-panel2 px-4 py-2.5 text-sm text-slate-700; }
+  /* Timeline dot */
+  .timeline-dot { @apply h-2.5 w-2.5 rounded-full border-2 border-white; }
+}
+
+/* New Build wizard: horizontal slide between screens (PowerDVD-style). */
+.wizard-slide { animation: wizard-in 0.25s ease both; }
+.wizard-slide[data-dir='back'] { animation-name: wizard-in-back; }
+@keyframes wizard-in { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes wizard-in-back { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: translateX(0); } }

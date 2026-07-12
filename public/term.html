@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0d1117" />
+  <title>terminal</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="/vendor/xterm.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="terminal">
+  <div id="status" class="status hidden" role="button" tabindex="0"></div>
+  <a id="home" href="/" class="home" title="All sessions">‹ sessions</a>
+  <div id="term"></div>
+
+  <!-- Mobile helper keys -->
+  <div id="keybar" class="keybar" role="toolbar" aria-label="Keyboard helpers">
+    <!-- Front row: always visible on iPhone portrait (most-used during AI sessions) -->
+    <button class="kb" data-key="esc" aria-label="Escape">Esc</button>
+    <button class="kb" data-key="enter" aria-label="Enter">↵</button>
+    <button class="kb" data-key="ctrlc" aria-label="Control-C">⌃C</button>
+    <button class="kb" data-key="prefix" aria-label="tmux prefix, Control-b">⌃b</button>
+    <button id="k-ctrl" class="kb toggle" aria-pressed="false" aria-label="Ctrl modifier">Ctrl</button>
+    <button class="kb" data-key="up" aria-label="Up arrow">↑</button>
+    <button class="kb" data-key="down" aria-label="Down arrow">↓</button>
+    <button id="k-copy" class="kb" aria-label="Copy selection">Copy</button>
+    <button id="k-paste" class="kb" aria-label="Paste from clipboard">Paste</button>
+    <button id="k-scroll" class="kb toggle" aria-pressed="false" aria-label="Enter tmux scroll/copy mode">Scroll</button>
+    <!-- Secondary: navigation + editing -->
+    <button class="kb" data-key="tab" aria-label="Tab">Tab</button>
+    <button class="kb" data-key="left" aria-label="Left arrow">←</button>
+    <button class="kb" data-key="right" aria-label="Right arrow">→</button>
+    <button class="kb" data-key="home" aria-label="Home, jump to line start">Home</button>
+    <button class="kb" data-key="end" aria-label="End, jump to line end">End</button>
+    <button class="kb" data-key="wordleft" aria-label="Word left">W←</button>
+    <button class="kb" data-key="wordright" aria-label="Word right">W→</button>
+    <button class="kb" data-key="pgup" aria-label="Page Up">PgUp</button>
+    <button class="kb" data-key="pgdn" aria-label="Page Down">PgDn</button>
+    <button id="k-selall" class="kb" aria-label="Select all visible text">SelAll</button>
+    <button id="k-sudo" class="kb toggle" aria-pressed="false" aria-label="Allow passwordless sudo in this session (toggle)">Sudo</button>
+    <!-- Font size -->
+    <button id="k-font-up" class="kb font-btn" aria-label="Increase font size">A+</button>
+    <button id="k-font-dn" class="kb font-btn" aria-label="Decrease font size">A−</button>
+    <button id="k-cmd" class="kb toggle" aria-label="Toggle command bar" aria-pressed="false">⌨</button>
+  </div>
+  <!-- Command bar: shown when ⌨ is toggled — sits above the keybar -->
+  <div id="cmdbar" role="search" aria-label="Command input">
+    <input id="cmd-input" type="text" placeholder="type command…"
+           enterkeyhint="send" autocomplete="off" autocorrect="off"
+           autocapitalize="none" spellcheck="false" />
+    <button id="cmd-send" aria-label="Send command">↵ Send</button>
+    <button id="cmd-close" aria-label="Close command bar">✕</button>
+  </div>
+  <!-- ↓ Live floats above keybar as a fixed pill (shown by JS when scrolled up) -->
+  <button id="k-bottom" aria-label="Scroll to bottom">↓ Live</button>
+  <!-- Landscape keybar toggle — fixed pill at bottom-center -->
+  <button id="k-hide" aria-label="Hide keybar">⌃ hide</button>
+
+  <script src="/vendor/xterm.js"></script>
+  <script src="/vendor/addon-fit.js"></script>
+  <script src="/js/term.js" type="module"></script>
+</body>
+</html>

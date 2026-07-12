@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 620" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4069F5"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1060" height="620" rx="20" fill="#F7F8FC"/>
+  <rect x="1.5" y="1.5" width="1057" height="617" rx="19" fill="none" stroke="#e5e8ef" stroke-width="1.5"/>
+
+  <text x="530" y="54" text-anchor="middle" font-size="30" font-weight="700" fill="#08164A">How LoopCodeLab works</text>
+  <text x="530" y="84" text-anchor="middle" font-size="16" fill="#5b6478">Describe an idea. A team of AI agents plans it, builds it in parallel, reviews each other, and ships it as a git repo.</text>
+
+  <!-- connectors (drawn first, under the cards) -->
+  <g fill="none" stroke="#4069F5" stroke-width="2.5">
+    <path d="M192,290 L236,290" marker-end="url(#arw)"/>
+    <path d="M404,290 C440,290 438,168 470,168" marker-end="url(#arw)"/>
+    <path d="M404,290 L470,290" marker-end="url(#arw)"/>
+    <path d="M404,290 C440,290 438,412 470,412" marker-end="url(#arw)"/>
+    <path d="M708,168 C746,168 748,290 781,290" marker-end="url(#arw)"/>
+    <path d="M708,290 L781,290" marker-end="url(#arw)"/>
+    <path d="M708,412 C746,412 748,290 781,290" marker-end="url(#arw)"/>
+    <path d="M860,246 L860,214" marker-end="url(#arw)"/>
+  </g>
+  <!-- reject/retry loop -->
+  <path d="M786,326 C720,392 700,474 480,474 C300,474 250,398 322,336" fill="none" stroke="#94a3c4" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arw)"/>
+  <text x="533" y="494" text-anchor="middle" font-size="11" fill="#5b6478">rejected stories retry on the latest main</text>
+
+  <!-- STAGE 1 -->
+  <rect x="42" y="250" width="150" height="80" rx="14" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+  <text x="117" y="284" text-anchor="middle" font-size="12" font-weight="700" fill="#6C2CF2" letter-spacing="0.5">1 · DESCRIBE</text>
+  <text x="117" y="308" text-anchor="middle" font-size="16" font-weight="700" fill="#08164A">Your prompt</text>
+  <text x="117" y="326" text-anchor="middle" font-size="12" fill="#5b6478">in plain words</text>
+
+  <!-- STAGE 2 -->
+  <rect x="240" y="250" width="164" height="80" rx="14" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+  <text x="322" y="284" text-anchor="middle" font-size="12" font-weight="700" fill="#6C2CF2" letter-spacing="0.5">2 · PLAN</text>
+  <text x="322" y="308" text-anchor="middle" font-size="16" font-weight="700" fill="#08164A">Planner</text>
+  <text x="322" y="326" text-anchor="middle" font-size="12" fill="#5b6478">splits into stories (prd.json)</text>
+
+  <!-- STAGE 3 -->
+  <text x="590" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#6C2CF2" letter-spacing="0.5">3 · BUILD IN PARALLEL</text>
+  <g>
+    <rect x="472" y="140" width="236" height="56" rx="12" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+    <text x="490" y="164" font-size="15" font-weight="700" fill="#08164A">Worker agent</text>
+    <text x="490" y="183" font-size="12" fill="#5b6478">own git worktree · branch prd/1</text>
+    <rect x="472" y="262" width="236" height="56" rx="12" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+    <text x="490" y="286" font-size="15" font-weight="700" fill="#08164A">Worker agent</text>
+    <text x="490" y="305" font-size="12" fill="#5b6478">own git worktree · branch prd/2</text>
+    <rect x="472" y="384" width="236" height="56" rx="12" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+    <text x="490" y="408" font-size="15" font-weight="700" fill="#08164A">Worker agent</text>
+    <text x="490" y="427" font-size="12" fill="#5b6478">own git worktree · branch prd/3</text>
+  </g>
+
+  <!-- STAGE 4 -->
+  <rect x="784" y="248" width="152" height="84" rx="14" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+  <text x="860" y="282" text-anchor="middle" font-size="12" font-weight="700" fill="#6C2CF2" letter-spacing="0.5">4 · REVIEW</text>
+  <text x="860" y="306" text-anchor="middle" font-size="16" font-weight="700" fill="#08164A">Master</text>
+  <text x="860" y="324" text-anchor="middle" font-size="12" fill="#5b6478">reviews + merges to main</text>
+  <text x="860" y="358" text-anchor="middle" font-size="11" fill="#5b6478">ACCEPT → merge   ·   REJECT → retry</text>
+
+  <!-- STAGE 5 -->
+  <rect x="784" y="150" width="152" height="62" rx="14" fill="#ffffff" stroke="#e5e8ef" stroke-width="1.5"/>
+  <text x="860" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#6C2CF2" letter-spacing="0.5">5 · SHIP</text>
+  <text x="860" y="197" text-anchor="middle" font-size="15" font-weight="700" fill="#08164A">Live git project</text>
+
+  <!-- footer -->
+  <rect x="42" y="540" width="976" height="54" rx="12" fill="#08164A"/>
+  <text x="64" y="567" font-size="14" font-weight="700" fill="#ffffff">Every agent is a tmux session</text>
+  <text x="64" y="585" font-size="12" fill="#c7d0e6">Attach to any planner, worker, or reviewer and watch the build happen live. Bring your own AI keys; your code stays yours.</text>
+  <text x="998" y="576" text-anchor="end" font-size="13" font-weight="700" fill="#10C9DE">Learn · Build · Repeat</text>
+</svg>

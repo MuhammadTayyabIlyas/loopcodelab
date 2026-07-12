@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <title>tmux sessions</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <script>
+    // Multi-tenant gate: if app accounts are enabled (WEBTMUX_MULTITENANT) and we
+    // aren't signed in, bounce to the login page. Inert in single-tenant mode —
+    // /api/auth/me isn't mounted, so a non-401 (404/network) just proceeds.
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((r) => { if (r.status === 401) location.replace('/login.html'); })
+      .catch(() => {});
+  </script>
+</head>
+<body class="dashboard">
+  <header class="bar">
+    <h1>tmux sessions</h1>
+    <div class="bar-actions">
+      <span id="health" class="health" title="Server status">●</span>
+      <button id="install-btn" class="btn install-btn" hidden>⊕ Install app</button>
+      <button id="settings-btn" class="btn icon-text" title="Settings" aria-label="Settings">⚙</button>
+      <button id="ralph-builds-btn" class="btn" title="View all builds">📁 Builds</button>
+      <button id="ralph-btn" class="btn" title="Autonomous multi-agent build">🤖 Ralph</button>
+      <button type="button" id="adopt-open" class="btn small">📥 Adopt existing</button>
+      <button type="button" id="maint-open" class="btn small danger" title="Open a root shell to maintain the deployment">🔧 Root shell</button>
+      <button id="new-btn" class="btn primary">+ New session</button>
+    </div>
+  </header>
+
+  <details id="projects-panel" class="panel">
+    <summary>Projects <span id="proj-count" class="muted"></span></summary>
+    <div id="projects-list" class="projects-list"></div>
+  </details>
+
+  <div class="toolbar">
+    <input id="filter" class="filter" placeholder="Filter sessions…" autocomplete="off"
+           autocapitalize="off" autocorrect="off" spellcheck="false" />
+    <select id="sort" class="sort" aria-label="Sort sessions">
+      <option value="activity">Recent</option>
+      <option value="name">Name</option>
+      <option value="project">Project</option>
+    </select>
+  </div>
+
+  <main id="list" class="list" aria-live="polite">
+    <p class="empty">Loading…</p>
+  </main>
+
+  <!-- New / rename modal -->
+  <dialog id="dlg">
+    <form method="dialog" id="dlg-form">
+      <h2 id="dlg-title">New session</h2>
+      <div id="dlg-launch">
+        <label class="field-label" for="dlg-project">Project</label>
+        <div class="project-row">
+          <select id="dlg-project"></select>
+          <button type="button" id="proj-new" class="btn">+ New</button>
+        </div>
+        <p class="hint proj-hint">Pick an existing project to continue it in the same folder, or <code>+ New</code> for a fresh one.</p>
+        <div id="proj-new-row" class="project-row" hidden>
+          <input id="proj-name" placeholder="new project folder" maxlength="64"
+                 autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <button type="button" id="proj-create" class="btn primary">Create</button>
+          <button type="button" id="proj-cancel" class="btn" aria-label="Cancel">✕</button>
+        </div>
+        <p id="proj-error" class="error" hidden></p>
+
+        <label class="field-label">Start with</label>
+        <div id="dlg-tools" class="presets" role="group" aria-label="Start with">
+          <button type="button" class="chip active" data-tool="">Shell</button>
+          <button type="button" class="chip" data-tool="claude">Claude</button>
+          <button type="button" class="chip" data-tool="codex">Codex</button>
+          <button type="button" class="chip" data-tool="gemini">Gemini</button>
+          <button type="button" class="chip" data-tool="qwen">Qwen</button>
+          <button type="button" class="chip" data-tool="kimi">Kimi</button>
+          <button type="button" class="chip" data-tool="grok">Grok</button>
+          <button type="button" class="chip" data-tool="vibe">Vibe</button>
+          <button type="button" class="chip" data-tool="glm">GLM-5.1</button>
+        </div>
+        <label class="field-label" id="ssh-label" hidden>Connect (SSH)</label>
+        <div id="dlg-ssh" class="presets" role="group" aria-label="Connect over SSH" hidden></div>
+        <div id="dlg-modes" class="presets modes" role="group" aria-label="Mode" hidden>
+          <button type="button" class="chip active" data-mode="safe">Default (safe)</button>
+          <button type="button" class="chip danger-mode" data-mode="bypass">Bypass safety</button>
+        </div>
+
+        <!-- MCP Server Picker -->
+        <div id="dlg-mcp-row" hidden>
+          <div class="mcp-header">
+            <span class="field-label" style="margin:0">MCP Servers</span>
+            <div class="mcp-actions">
+              <button type="button" id="mcp-none" class="mcp-btn-small" title="Clear all">None</button>
+              <button type="button" id="mcp-all" class="mcp-btn-small" title="Select all">All</button>
+            </div>
+          </div>
+          <p class="hint" style="margin:2px 0 6px">Connect MCP servers from <code>mcp.tayyabcheema.com</code> to add tools to the AI agent.</p>
+          <div id="mcp-categories" class="mcp-categories">
+            <p class="hint">Loading…</p>
+          </div>
+          <div id="mcp-selected" class="mcp-selected" hidden>
+            <span class="field-label" style="font-size:0.85em">Selected (<span id="mcp-count">0</span>)</span>
+            <div id="mcp-tags" class="mcp-tags"></div>
+          </div>
+        </div>
+
+        <label id="dlg-resume-row" class="check-row" hidden>
+          <input type="checkbox" id="dlg-resume" />
+          <span>Continue previous context <small>(resume the last conversation in this folder)</small></span>
+        </label>
+        <p id="dlg-cmd" class="cmdline" hidden></p>
+      </div>
+      <input id="dlg-input" autocomplete="off" autocapitalize="off" autocorrect="off"
+             spellcheck="false" placeholder="session name" maxlength="32" />
+      <p class="hint">Letters, numbers, <code>_</code> and <code>-</code> only.</p>
+      <p id="dlg-error" class="error" hidden></p>
+      <div class="row">
+        <button value="cancel" class="btn">Cancel</button>
+        <button id="dlg-ok" value="ok" class="btn primary">Create</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Ralph: autonomous multi-agent build -->
+  <dialog id="ralph-dlg">
+    <form method="dialog" id="ralph-form">
+      <h2>🤖 Ralph build</h2>
+      <p class="hint">An OpenAI planner splits your idea into stories; worker agents build them in parallel (each on its own git branch); the master agent reviews quality, integrates, and pushes to a private GitHub repo.</p>
+      <div id="ralph-active" class="ralph-active" hidden></div>
+      <p id="ralph-prefs-hint" class="hint" hidden></p>
+      <label class="field-label" for="ralph-project">New project name <small>(becomes its link, e.g. my-app.tayyabcheema.com)</small></label>
+      <input id="ralph-project" placeholder="my-app" maxlength="64"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      <label class="field-label" for="ralph-idea">What should it build?</label>
+      <textarea id="ralph-idea" rows="3" placeholder="e.g. A CLI todo app in Node: add, list, and complete tasks stored in a JSON file."></textarea>
+      <label class="field-label">Master <small>(reviews quality, integrates, finalizes)</small></label>
+      <div id="ralph-master" class="presets" role="group" aria-label="Master agent"></div>
+      <label class="field-label">Workers <small>(build stories in parallel)</small></label>
+      <div id="ralph-workers" class="presets" role="group" aria-label="Worker agents"></div>
+      <p id="ralph-solo-note" class="muted" hidden></p>
+      <div class="ralph-limits">
+        <div>
+          <label class="field-label" for="ralph-attempts">Attempts / story <small>(master retries)</small></label>
+          <input id="ralph-attempts" type="number" min="1" max="10" value="3" class="num-input" />
+        </div>
+        <div>
+          <label class="field-label" for="ralph-passes">Passes / attempt <small>(worker self-retries)</small></label>
+          <input id="ralph-passes" type="number" min="1" max="5" value="1" class="num-input" />
+        </div>
+      </div>
+      <label class="field-label" for="ralph-output">Output format <small>(how the finished result is delivered)</small></label>
+      <select id="ralph-output" class="num-input" style="width:auto">
+        <option value="auto">Auto — let the planner/master decide</option>
+        <option value="web-app">Live web app</option>
+        <option value="flutter-app">Flutter mobile app (Android + web)</option>
+        <option value="google-doc">Google Doc</option>
+        <option value="google-sheet">Google Sheet</option>
+        <option value="google-slides">Google Slides</option>
+        <option value="downloadable">Downloadable file (.docx / .pdf)</option>
+      </select>
+      <label class="field-label" for="ralph-model">Model <small>(optional — blank uses the agent's connected default)</small></label>
+      <select id="ralph-model" class="num-input" style="width:auto">
+        <option value="">Connected default</option>
+        <option value="qwen3.7-max">Qwen3.7 Max (token plan)</option>
+        <option value="qwen3.7-plus">Qwen3.7 Plus (token plan)</option>
+        <option value="glm-5.2">GLM-5.2 (token plan)</option>
+        <option value="glm-5.1">GLM-5.1 (token plan)</option>
+        <option value="kimi-k2.7-code">Kimi K2.7 Code (token plan)</option>
+        <option value="deepseek-v4-pro">DeepSeek V4 Pro (token plan)</option>
+        <option value="deepseek-v4-flash">DeepSeek V4 Flash (token plan)</option>
+        <option value="MiniMax-M2.5">MiniMax M2.5 (token plan)</option>
+      </select>
+      <label class="check-row">
+        <input type="checkbox" id="ralph-bypass" checked />
+        <span>Bypass mode <small>(agents skip permission prompts — required for autonomous runs)</small></span>
+      </label>
+      <p id="ralph-error" class="error" hidden></p>
+      <div class="row">
+        <button value="cancel" class="btn">Cancel</button>
+        <button id="ralph-plan" value="ok" class="btn primary">Plan stories →</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Ralph: gallery of all builds -->
+  <dialog id="ralph-builds-dlg">
+    <form method="dialog">
+      <h2>📁 Builds</h2>
+      <div id="ralph-builds-list" class="builds-list"><p class="hint">Loading…</p></div>
+      <div class="row"><button value="close" class="btn primary">Close</button></div>
+    </form>
+  </dialog>
+
+  <!-- Ralph: clarifying questions before planning -->
+  <dialog id="ralph-clarify-dlg">
+    <form method="dialog" id="ralph-clarify-form">
+      <h2>A few quick questions</h2>
+      <p class="hint">Pick an option, or choose “Something else…” to write your own. Your answers help the planner write smarter, more specific stories.</p>
+      <div id="ralph-clarify-qs"></div>
+      <div class="clarify-q" id="ralph-asset-tray">
+        <div class="field-label">Brand assets (optional)</div>
+        <div class="clarify-opt-desc">Logo, brand images, or a brand guide. PNG/JPG/WEBP/GIF/SVG/PDF, ≤10 MB each, up to 12.</div>
+        <input type="file" id="ralph-asset-input" multiple accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.pdf,image/*,application/pdf">
+        <ul id="ralph-asset-list"></ul>
+        <p id="ralph-asset-error" class="error" hidden></p>
+      </div>
+      <p id="ralph-clarify-error" class="error" hidden></p>
+      <div class="row">
+        <button value="skip" class="btn">Skip</button>
+        <button id="ralph-clarify-go" value="ok" class="btn primary">Generate plan →</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Ralph: confirm the planned stories before building -->
+  <dialog id="ralph-confirm-dlg">
+    <form method="dialog" id="ralph-confirm-form">
+      <h2>Confirm the plan</h2>
+      <p class="hint">The planner proposed these stories with skills, tools and an output format for each. Adjust any of them, then build — or go back to change the idea.</p>
+      <p id="ralph-confirm-summary" class="hint"></p>
+      <div id="ralph-confirm-stories" class="ralph-stories"></div>
+      <p id="ralph-confirm-error" class="error" hidden></p>
+      <div class="row">
+        <button value="back" class="btn">← Back</button>
+        <button id="ralph-confirm-go" value="ok" class="btn primary">Confirm &amp; build</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Ralph: live build status -->
+  <dialog id="ralph-status-dlg">
+    <form method="dialog">
+      <h2 id="ralph-status-title">Build status</h2>
+      <p id="ralph-status-phase" class="ralph-phase"></p>
+      <div id="ralph-status-attention" hidden></div>
+      <div id="ralph-status-stories" class="ralph-stories"></div>
+      <p id="ralph-status-repo" class="hint" hidden></p>
+      <div class="row"><button value="close" class="btn primary">Close</button></div>
+    </form>
+  </dialog>
+
+  <!-- Windows installer: wrap a finished web-app build as a Tauri desktop installer (built on GitHub Actions) -->
+  <dialog id="win-installer-dlg">
+    <h3>🪟 Build Windows installer</h3>
+    <p class="muted">Wraps the finished web app as a Tauri desktop installer, built on a GitHub Actions Windows runner. Leave blank for sensible defaults.</p>
+    <label class="field-label">App identifier <input id="win-appid" class="input" placeholder="com.webtmux.app"></label>
+    <label class="field-label">Product name <input id="win-product" class="input" placeholder="my-app"></label>
+    <label class="field-label">Version <input id="win-version" class="input" value="1.0.0" placeholder="1.0.0"></label>
+    <p id="win-err" class="muted" hidden></p>
+    <div class="row" style="justify-content:flex-end;gap:8px">
+      <button type="button" id="win-cancel" class="btn small">Cancel</button>
+      <button type="button" id="win-start" class="btn small primary">Scaffold &amp; push</button>
+    </div>
+  </dialog>
+
+  <!-- Microsoft Store package: unsigned appx built on Actions (electron) or pwabuilder.com checklist (pwa) -->
+  <dialog id="win-store-dlg">
+    <h3>🏪 Build Microsoft Store package</h3>
+    <p class="muted">Reserve the app in Partner Center first (free) and paste the three Product-identity values (saved values in Settings are used when left blank). The package is unsigned — the Store re-signs it.</p>
+    <label class="field-label">Packaging
+      <select id="ws-packaging" class="input">
+        <option value="electron">Electron appx — automated on GitHub Actions</option>
+        <option value="pwa">PWA via pwabuilder.com — leaner package, ~2 min manual</option>
+      </select>
+    </label>
+    <label class="field-label">Identity name <input id="ws-identity" class="input" placeholder="12345Publisher.AppName"></label>
+    <label class="field-label">Publisher id <input id="ws-publisher" class="input" placeholder="CN=xxxxxxxx-xxxx-…"></label>
+    <label class="field-label">Publisher display name <input id="ws-pubname" class="input" placeholder="Your publisher name"></label>
+    <label class="field-label">Version <input id="ws-version" class="input" value="1.0.0" placeholder="1.0.0"></label>
+    <p id="ws-err" class="muted" hidden></p>
+    <div class="row" style="justify-content:flex-end;gap:8px">
+      <button type="button" id="ws-cancel" class="btn small">Cancel</button>
+      <button type="button" id="ws-start" class="btn small primary">Start</button>
+    </div>
+  </dialog>
+
+  <!-- Brownfield: adopt an existing project -->
+  <dialog id="adopt-dialog">
+    <h3>📥 Adopt existing project</h3>
+    <p class="muted">Browse to a directory on the server. It's copied in (your original is untouched), researched, then you give the change.</p>
+    <label class="field-label">Project name <input id="adopt-name" class="input" placeholder="my-app"></label>
+    <label class="field-label">Master <select id="adopt-master"><option>claude</option><option>codex</option><option>qwen</option><option>gemini</option></select></label>
+    <div class="field-label">Source
+      <div class="row" style="gap:8px">
+        <button type="button" id="adopt-mode-local" class="btn small primary">📁 Local</button>
+        <button type="button" id="adopt-mode-ssh" class="btn small">🔗 Remote (SSH)</button>
+      </div>
+    </div>
+    <label class="field-label" id="adopt-host-row" hidden>SSH host
+      <select id="adopt-host" class="input"></select>
+    </label>
+    <div class="field-label">Source directory
+      <div id="adopt-cwd" class="muted" style="font-family:monospace;word-break:break-all"></div>
+      <div id="adopt-list" style="max-height:38vh;overflow:auto;border:1px solid var(--border,#30363d);border-radius:8px"></div>
+    </div>
+    <p id="adopt-err" class="muted" hidden></p>
+    <div class="row" style="justify-content:flex-end;gap:8px">
+      <button type="button" id="adopt-cancel" class="btn small">Cancel</button>
+      <button type="button" id="adopt-go" class="btn small primary">Adopt this directory &amp; research</button>
+    </div>
+  </dialog>
+
+  <!-- Brownfield: research results + instruct -->
+  <dialog id="research-dialog">
+    <h3>🔎 <span id="research-project"></span></h3>
+    <pre id="research-md" style="white-space:pre-wrap;max-height:50vh;overflow:auto;background:#0d1117;padding:10px;border-radius:8px"></pre>
+    <label class="field-label">What change should the agents make?
+      <textarea id="instruct-idea" class="input" rows="4" placeholder="e.g. add a dark-mode toggle to the settings page"></textarea></label>
+    <p id="instruct-err" class="muted" hidden></p>
+    <div class="row" style="justify-content:flex-end;gap:8px">
+      <button type="button" id="research-close" class="btn small">Close</button>
+      <button type="button" id="instruct-go" class="btn small primary">Plan &amp; build</button>
+    </div>
+  </dialog>
+
+  <!-- Generic name prompt (duplicate) -->
+  <dialog id="prompt-dlg">
+    <form method="dialog" id="prompt-form">
+      <h2 id="prompt-title">Name</h2>
+      <input id="prompt-input" autocomplete="off" autocapitalize="off" autocorrect="off"
+             spellcheck="false" maxlength="32" />
+      <p class="hint">Letters, numbers, <code>_</code> and <code>-</code> only.</p>
+      <p id="prompt-error" class="error" hidden></p>
+      <div class="row">
+        <button value="cancel" class="btn">Cancel</button>
+        <button value="ok" class="btn primary">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Per-session action sheet -->
+  <dialog id="sheet-dlg">
+    <form method="dialog">
+      <h2 id="sheet-title">Session</h2>
+      <div id="sheet-actions" class="sheet-actions"></div>
+      <div class="row"><button value="cancel" class="btn">Close</button></div>
+    </form>
+  </dialog>
+
+  <!-- Project context editor -->
+  <dialog id="ctx-dlg">
+    <form method="dialog" id="ctx-form">
+      <h2 id="ctx-title">Context</h2>
+      <p class="hint">Shared <code>AGENTS.md</code> — read by Claude, Codex, Gemini &amp; Qwen.</p>
+      <textarea id="ctx-text" class="ctx-text" spellcheck="false"></textarea>
+      <p id="ctx-error" class="error" hidden></p>
+      <div class="row">
+        <button value="cancel" class="btn">Cancel</button>
+        <button id="ctx-save" value="ok" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings: notifications + audit -->
+  <dialog id="settings-dlg">
+    <form method="dialog">
+      <h2>Settings</h2>
+      <label class="field-label">Notifications</label>
+      <p id="notif-state" class="hint">Checking…</p>
+      <div class="presets">
+        <button type="button" id="notif-enable" class="chip">Enable</button>
+        <button type="button" id="notif-disable" class="chip" hidden>Disable</button>
+        <button type="button" id="notif-test" class="chip" hidden>Send test</button>
+      </div>
+      <p class="hint">Get pinged when an agent finishes or goes quiet (may need input). On iOS, install the app to the home screen first.</p>
+
+      <label class="field-label">Recent launches</label>
+      <div id="audit-list" class="audit-list"><p class="hint">Loading…</p></div>
+      <div class="row"><button value="cancel" class="btn">Close</button></div>
+    </form>
+  </dialog>
+
+  <!-- Kill confirmation -->
+  <dialog id="confirm-dlg">
+    <form method="dialog">
+      <h2>Kill session?</h2>
+      <p id="confirm-msg" class="hint"></p>
+      <div class="row">
+        <button value="cancel" class="btn">Cancel</button>
+        <button value="ok" class="btn danger">Kill</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Remote control: QR pairing + paired devices -->
+  <dialog id="rc-dialog">
+    <h3>📱 Remote control</h3>
+    <p class="muted">Scan to pair this device, then supervise from your phone.</p>
+    <div id="rc-qr" style="display:flex;justify-content:center;padding:8px"></div>
+    <p class="muted" id="rc-qr-hint"></p>
+    <h4>Paired devices</h4>
+    <div id="rc-devices"></div>
+    <div class="row" style="justify-content:flex-end"><button type="button" id="rc-close" class="btn small">Close</button></div>
+  </dialog>
+  <script src="/vendor/qrcode.min.js"></script>
+
+  <script src="/js/dashboard.js" type="module"></script>
+</body>
+</html>

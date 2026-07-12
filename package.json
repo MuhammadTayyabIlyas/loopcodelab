@@ -1,0 +1,20 @@
+{
+  "name": "loopcodelab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LoopCodeLab (basic edition): a self-hosted web terminal over a tmux PTY bridge, plus Ralph, an autonomous multi-agent build orchestrator that turns a prompt into a git-tracked project. Single-tenant, no admin panel.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "express": "^4.21.2",
+    "node-pty": "^1.0.0",
+    "playwright-core": "^1.61.1",
+    "web-push": "^3.6.7",
+    "ws": "^8.18.0"
+  }
+}

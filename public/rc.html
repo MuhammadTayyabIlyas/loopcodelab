@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>webtmux Remote Control</title>
+  <link rel="manifest" href="/rc/rc.webmanifest" />
+  <link rel="stylesheet" href="/rc/vendor/xterm.css" />
+  <meta name="theme-color" content="#0b0f14" />
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; font: 15px system-ui, sans-serif; background: #0b0f14; color: #e6edf3; }
+    header { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid #1c2530; }
+    select, button { font: inherit; background: #161b22; color: #e6edf3; border: 1px solid #30363d; border-radius: 8px; padding: 8px 10px; }
+    button.primary { background: #1f6feb; border-color: #1f6feb; }
+    #pane { height: 46vh; padding: 6px; }
+    #bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+    #bar button { flex: 1 1 30%; }
+    #q { margin: 10px 12px; padding: 10px; border: 1px solid #d29922; border-radius: 10px; background: #2a210a; display: none; }
+    textarea { width: 100%; box-sizing: border-box; background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 8px; padding: 8px; }
+    #msg { padding: 8px 12px; color: #8b949e; min-height: 18px; }
+    .hide { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <select id="project"></select>
+    <span id="phase" style="color:#8b949e"></span>
+    <button id="notify" style="margin-left:auto">🔔</button>
+  </header>
+  <div id="q">
+    <div id="qtext" style="white-space:pre-wrap;margin-bottom:8px"></div>
+    <textarea id="qans" rows="3" placeholder="Answer the master…"></textarea>
+    <button class="primary" id="qsend" style="margin-top:8px;width:100%">Send answer</button>
+  </div>
+  <div id="pane"></div>
+  <div id="bar">
+    <button data-act="continue">▶ Continue</button>
+    <button data-act="steer">🧭 Steer</button>
+    <button data-act="restart">🔁 Restart</button>
+    <button data-act="swap">🔀 Swap</button>
+  </div>
+  <div id="msg"></div>
+  <p id="ios-a2hs" class="hide" style="padding:0 12px;color:#8b949e">On iPhone: Share → <b>Add to Home Screen</b> to get notifications.</p>
+  <script src="/rc/vendor/xterm.js"></script>
+  <script type="module" src="/rc/rc.js"></script>
+</body>
+</html>
