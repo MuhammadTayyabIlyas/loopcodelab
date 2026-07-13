@@ -34,6 +34,17 @@ Describe an idea, and a team of agents plans, builds, reviews, and ships it. Sel
 - **Multiple CLI agents.** Ralph drives several coding CLIs (`claude`, `codex`, `qwen`, and others) behind one interface, so you can mix and match.
 - **The Loop.** Plan → build → review → ship, then learn from the result and go again.
 
+## Learning and self-improvement
+
+LoopCodeLab treats every build as something to learn from, so the platform tunes itself to you over time. This is the Loop System — Learn, Build, Repeat — and it runs on four systems:
+
+- **Cross-project preference memory.** Every start, swap, and finished run records a signal; these are distilled (recency-weighted) into a short profile of your consistent preferences that seeds your next build's defaults and is handed to the planner. A choice is only promoted to a "confirmed" fact once it recurs across separate builds, so a one-off never becomes a rule.
+- **Task-aware agent routing.** The planner picks an agent per story from reliability, cost, and availability, adjusted by what it has learned from your own history. Agents that keep stalling or getting rejected on your work get routed around, and a mid-build swap feeds the same memory.
+- **A self-curated skill library.** After each build finalizes, a reflector distills a few reusable `SKILL.md` files from that build's logbook and outcome. It is suggest-first: nothing injects into a future build until you approve it, and a scheduled curator retires stale skills and merges near-duplicates.
+- **The `MASTER.md` logbook.** The supervising master records its rulings per build; later supervision reads the log instead of re-deriving, and new workers inherit the standing rulings, so a long run stays consistent with itself.
+
+All of it is suggest-only: memory sets smarter defaults, but the confirm step always shows so you can override anything. Because you bring your own keys and self-host, the memory the platform builds about your work stays on your machine.
+
 ## How it works
 
 <div align="center">
@@ -81,6 +92,16 @@ Set `RALPH_FORCE_TOOL=stub` to drive the whole orchestrator end-to-end with dete
 
 - **Created by [Muhammad Tayyab Ilyas](https://tayyabcheema.com)** — [tayyabcheema777@gmail.com](mailto:tayyabcheema777@gmail.com) · [LinkedIn](https://www.linkedin.com/in/tayyabcheema777/) · [tayyabcheema.com](https://tayyabcheema.com)
 - **Website:** [loopcodelab.com](https://loopcodelab.com)
+
+## Support the developer
+
+LoopCodeLab is free to use with your own AI keys, and it is built and maintained by one developer. There are no plans and no metering — if it saves you time, you can drop a tip in the jar and buy the developer a coffee. Every bit helps keep the loop going.
+
+<div align="center">
+<img src="docs/brand/support-qr.jpg" alt="PayPal Tip Jar QR code to support the developer Muhammad Tayyab Ilyas" width="240" />
+</div>
+
+**Scan the PayPal Tip Jar** above to say thanks, or reach the author at [tayyabcheema.com](https://tayyabcheema.com). Thank you for supporting independent software.
 
 ## License
 
