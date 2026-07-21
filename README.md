@@ -34,6 +34,56 @@ Describe an idea, and a team of agents plans, builds, reviews, and ships it. Sel
 - **Multiple CLI agents.** Ralph drives several coding CLIs (`claude`, `codex`, `qwen`, and others) behind one interface, so you can mix and match.
 - **The Loop.** Plan → build → review → ship, then learn from the result and go again.
 
+## OpenAI Build Week 2026
+
+LoopCodeLab existed before the OpenAI Build Week Submission Period. During the event, I used
+**OpenAI Codex with GPT-5.6 Sol and Terra** to meaningfully extend the production system behind this
+public project. The Build Week work focused on making autonomous builds accessible without requiring
+every user to supply an API key, while preserving explicit cost, capability, and fallback controls.
+
+### What was added during the Submission Period
+
+- **Admin-managed shared builds.** Free, Pro, and Teams users can receive bounded access to
+  administrator-funded builds; BYO-key builds remain separate from the shared allowance.
+- **Tier-specific model routing.** Administrators configure independent master and worker chains
+  with ordered fallbacks for each tier. Routes are frozen when a build starts so an in-flight run is
+  reproducible even if policy changes later.
+- **Capability-aware admission and fallback.** Only connected, adapter-ready models can be exposed
+  for roles they support. Compatible fallbacks are attempted before a build is blocked, and a build
+  that cannot start does not consume shared quota.
+- **API and subscription model exposure.** Compatible API, token-plan, and OAuth-backed models are
+  represented in one admin catalog with health checks and clear compatibility feedback.
+
+### How Codex and GPT-5.6 accelerated the work
+
+The primary GPT-5.6 Codex thread traced the tenant, quota, provider, broker, and agent-launch paths;
+clarified the product rules with me; implemented changes across the backend and React UI; ran focused
+and full verification; diagnosed failures from the deployed product; and integrated the fixes into
+Git. It produced 22 scoped commits during a roughly 9.5-hour development session.
+
+- **Primary Codex Session ID:** `019f7a93-725e-7c00-a3a5-e7f5b4cbbef4`
+- **Model:** GPT-5.6 Sol; additional in-period Codex workers used GPT-5.6 Sol and Terra
+- **Key decisions:** freeze per-run routes; try ordered fallbacks before blocking; do not consume
+  quota when no compatible route can start; keep BYO usage independent from shared allowances
+- **Verification:** focused `node --test` suites, `npm run check`, repeated `npm test` and
+  `npm run verify`, production builds, service restarts, and local/deployed `/healthz` checks
+
+The project owner retained final product decisions, reviewed the output, tested the deployed system,
+and accepted each change. A redacted, timestamped evidence record is available in
+[`docs/BUILD_WEEK_EVIDENCE.md`](docs/BUILD_WEEK_EVIDENCE.md). It documents the private development
+history without publishing private infrastructure, credentials, tenant data, or session transcripts.
+
+### Testing path for judges
+
+1. Open the hosted product at [loopcodelab.com](https://loopcodelab.com) using the test account in
+   the private Devpost testing instructions, or follow the self-hosted setup below.
+2. Start an **Included** build as the supplied keyless test user; no personal provider key should be
+   required.
+3. Watch the live story activity, agent/model labels, review verdicts, fallback behavior, and final
+   deliverable from the build page.
+4. For a no-spend local orchestration test, set `RALPH_FORCE_TOOL=stub`; for repository checks, run
+   the tests described under Quick start and in `CLAUDE.md`.
+
 ## Learning and self-improvement
 
 LoopCodeLab treats every build as something to learn from, so the platform tunes itself to you over time. This is the Loop System — Learn, Build, Repeat — and it runs on four systems:
@@ -91,6 +141,8 @@ Set `RALPH_FORCE_TOOL=stub` to drive the whole orchestrator end-to-end with dete
 ## Credits
 
 - **Created by [Muhammad Tayyab Ilyas](https://tayyabcheema.com)** — [tayyabcheema777@gmail.com](mailto:tayyabcheema777@gmail.com) · [LinkedIn](https://www.linkedin.com/in/tayyabcheema777/) · [tayyabcheema.com](https://tayyabcheema.com)
+- **[OpenAI Codex](https://openai.com/codex/)** — development collaborator for architecture analysis, implementation, testing, debugging, review, and Git integration. GPT-5.6 Sol and Terra were used during OpenAI Build Week as documented above.
+- **Claude Opus and Sonnet** — co-development and review assistance where identified by commit trailers. Human direction, testing, deployment, and acceptance remained with the project owner.
 - **Website:** [loopcodelab.com](https://loopcodelab.com)
 
 ## Support the developer
